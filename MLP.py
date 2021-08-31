@@ -11,6 +11,15 @@ def MLP(X, Y, inner_layers=[]):
         return 1/(1+np.exp(-x)) # Sigmoid
         # return np.tanh(x) # Tanh
     
+    def xy_act(MLPw,MLPx,MLPy):
+        for i in range(len(MLPw)-1): 
+            MLPy[i] = activation_function(np.matmul(MLPw[i],MLPx[i]))
+        try:
+            MLPx[i+1][1:,:] = MLPy[i]
+        except:
+            pass
+        return MLPx,MLPy
+    
     ##### Define layers and weights #####
     layers = [X.shape[1],Y.shape[1]] # X, inner layer1, il2, ..., iln, Y 
     if inner_layers:
@@ -23,12 +32,16 @@ def MLP(X, Y, inner_layers=[]):
     MLPy = [np.ones((layers[i+1],X.shape[0])) for i in range(len(layers)-1)]
 
     MLPx[0][1:,:] = X.T 
-    for i in range(len(layers)-1): 
-        MLPy[i] = activation_function(np.matmul(MLPw[i],MLPx[i]))
-        try:
-            MLPx[i+1][1:,:] = MLPy[i]
-        except:
-            pass
+    # for i in range(len(layers)-1): 
+    #     MLPy[i] = activation_function(np.matmul(MLPw[i],MLPx[i]))
+    #     try:
+    #         MLPx[i+1][1:,:] = MLPy[i]
+    #     except:
+    #         pass
+ 
+    ##### xy actualization #####
+    MLPx,MLPy = xy_act(MLPw,MLPx,MLPy)
+    
     
     print(time.time()-t0)
     return MLPw, MLPx, MLPy
