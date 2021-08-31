@@ -7,23 +7,24 @@ def MLP(X, Y, inner_layers=[]):
     def activation_function(x):
         return 1/(1+np.exp(-x)) # Sigmoid
         # return np.tanh(x) # Tanh
+
+    inner_layers = [2,3]
     
     ##### Define layers and weights #####
     layers = [X.shape[1],Y.shape[1]] # X, inner layer1, il2, ..., iln, Y 
     if inner_layers:
         for i in range(len(inner_layers)):
             layers.insert(i+1,inner_layers[i])   
-    print(layers)
+
     # MLPw = [np.ones((layers[i+1],layers[i]+1)) for i in range(len(layers)-1)]
     MLPw = [np.random.rand(layers[i+1],layers[i]+1) for i in range(len(layers)-1)]
-     
+    
     ##### Calculation of outputs #####
     nX = np.ones((X.shape[0],X.shape[1]+1))
+    nX[:,1:] = X 
     
-    y1 = np.dot(MLPw[0],nX.T)
+    y1 = np.matmul(MLPw[0],nX.T)
     
-    print(y1)
-    print(y1.shape)
     # MLPx = [X.T
     # MLPy = [np.ones((layers[i+1],1)) for i in range(len(layers)-1)]
     
@@ -32,7 +33,7 @@ def MLP(X, Y, inner_layers=[]):
     return y1
     for layer in layers: 
         pass
-    
+        
     
 
 
