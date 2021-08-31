@@ -2,8 +2,11 @@
 
 import numpy as np
 import pandas as pd
+import time
 
 def MLP(X, Y, inner_layers=[]):
+    t0 = time.time()
+    
     def activation_function(x):
         return 1/(1+np.exp(-x)) # Sigmoid
         # return np.tanh(x) # Tanh
@@ -17,19 +20,20 @@ def MLP(X, Y, inner_layers=[]):
             layers.insert(i+1,inner_layers[i])   
 
     # MLPw = [np.ones((layers[i+1],layers[i]+1)) for i in range(len(layers)-1)]
-    MLPw = [np.random.rand(layers[i+1],layers[i]+1) for i in range(len(layers)-1)]
+    MLPw = [np.random.rand(layers[i+1],layers[i]+1)*2-1 for i in range(len(layers)-1)]
     
     ##### Calculation of outputs #####
     nX = np.ones((X.shape[0],X.shape[1]+1))
     nX[:,1:] = X 
     
-    y1 = np.matmul(MLPw[0],nX.T)
+    y1 = activation_function(np.matmul(MLPw[0],nX.T))
     
     # MLPx = [X.T
     # MLPy = [np.ones((layers[i+1],1)) for i in range(len(layers)-1)]
     
     # def MLPy_act():
     #     np.dot(MLPw[0],MLPy[0])
+    print(time.time()-t0)
     return y1
     for layer in layers: 
         pass
