@@ -21,6 +21,7 @@ def MLP(X, Y, inner_layers=[]):
     def xy_act(MLPw,MLPx,MLPy):
         for i in range(len(MLPw)-1): 
             tmp = np.matmul(MLPw[i],MLPx[i])
+            print(tmp)
             MLPy[i] = af(tmp)
             MLPdaf[i] = daf(tmp)
             try:
@@ -32,8 +33,9 @@ def MLP(X, Y, inner_layers=[]):
     def deltas(MLPw, MLPdaf, MLPy, Y): # Needed for backpropagation
         l = len(MLPdaf)
         J = (MLPy[-1]-Y.T)**2/2
-        print(J.sum())
+        # print(J.sum())
         E = MLPy[-1]-Y.T
+        print(E)
         for i in range(l):
             if i==0:
                 MLPd[l-i-1] = E*MLPdaf[l-i-1]
@@ -47,8 +49,9 @@ def MLP(X, Y, inner_layers=[]):
         return MLPg
     
     def w_act(MLPw, MLPg, n):
+        # print(MLPw)
         for i in range(len(MLPw)):
-            MLPw[i] -= n*MLPg[i]
+            MLPw[i] = MLPw[i] - n*MLPg[i]
         return MLPw
     
     ##### Define layers and weights #####
@@ -69,11 +72,12 @@ def MLP(X, Y, inner_layers=[]):
     MLPx[0][1:,:] = X.T 
 
     ##### xy actualization #####
-    for i in range(50):
+    for i in range(500):
+        print('iteration {}'.format(i))
         MLPx,MLPy,MLPdaf = xy_act(MLPw,MLPx,MLPy)
         MLPd = deltas(MLPw, MLPdaf, MLPy, Y)
         MLPg = gradient(MLPd, MLPx)
-        MLPw = w_act(MLPw, MLPg, 0.01)
+        MLPw = w_act(MLPw, MLPg, 1)
         
             
     print(time.time()-t0)
