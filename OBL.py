@@ -12,6 +12,8 @@ import pandas as pd
 
 OBL= lambda x: ((x[1] - x[2]) / ((1 - x[5]) * x[3] * (1 - 0.03 * x[7])) - 1) * 170 / (2 * (1 - x[6]))
 P = lambda x: (x[1] - x[2] - x[3] * (1 - 0.03 * x[7]) * (1 + x[0] * (1 - x[6]) / 170) * (1 - x[5])) * x[0] * x[4] / (1 - x[4])*24
+# OBL = lambda x: x.sum(axis=1)
+# P = lambda x: x.mean(axis=1)
 
 rand = np.random.rand(1000,8)
 rand[:,0]= rand[:,0]*30+80
