@@ -8,7 +8,7 @@ import pandas as pd
 
 
 
-def MLP(X, Y, inner_layers=[], iterations = 1000):
+def MLP(X, Y, inner_layers=[], iterations = 5000):
     t0 = time.time()
     
     def xy_act(MLPw, MLPx, MLPy, vfun):
@@ -23,7 +23,7 @@ def MLP(X, Y, inner_layers=[], iterations = 1000):
                 pass
         return MLPx,MLPy,MLPdaf
     
-    def deltas(MLPw, MLPdaf, MLPy, Y): # Needed for backpropagation
+    def deltas(MLPw, MLPdaf, MLPy, Y): 
         l = len(MLPdaf)
         J = (MLPy[-1]-Y.T)**2/2
         E = MLPy[-1]-Y.T
@@ -61,7 +61,7 @@ def MLP(X, Y, inner_layers=[], iterations = 1000):
     MLPd = [np.ones((layers[i+1],X.shape[0])) for i in range(len(layers)-1)]
     MLPg = [np.ones((layers[i+1],layers[i]+1)) for i in range(len(layers)-1)]
     
-    vfun = [Tanh]*(len(layers)-2)+[Linear]
+    vfun = [Sigmoid]*(len(layers)-2)+[Linear]
     Jhist = np.zeros(iterations)
     
     MLPx[0][1:,:] = X.T 
@@ -77,7 +77,7 @@ def MLP(X, Y, inner_layers=[], iterations = 1000):
             
     print('execution time: {} seconds'.format(time.time()-t0))
 
-    return MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist
+    return MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist, vfun
 
 ############## Funciones de Activación ################
 class Sigmoid():
@@ -107,7 +107,7 @@ Y = (Y-Y.mean(axis=0))/Y.std(axis=0)
 
 
 # MLP(X,Y) # No inner layers
-MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist = MLP(X,Y,[8,8], 5000) # With inner layers
+MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist, vfun = MLP(X,Y, [8,8,8], 5) # With inner layers
 
 
 
