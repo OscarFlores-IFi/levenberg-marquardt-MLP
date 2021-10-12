@@ -11,8 +11,8 @@ import pandas as pd
 def MLP(X, Y, inner_layers=[], iterations = 5000):
     t0 = time.time()
     
-    def GD(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist, vfun):    #Gradient Descent
-            
+    def LM(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist, vfun, i):
+           
         def xy_act(MLPw, MLPx, MLPy, vfun):
             for i in range(len(MLPw)): 
                 tmp = np.matmul(MLPw[i],MLPx[i])
@@ -25,80 +25,28 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
                     pass
             return MLPx,MLPy,MLPdaf
         
-        def deltas(MLPw, MLPdaf, MLPy, Y): 
-            l = len(MLPdaf)
-            J = (MLPy[-1]-Y.T)**2/2
-            E = MLPy[-1]-Y.T
-            # print(E)
-            for i in range(l):
-                if i==0:
-                    MLPd[l-i-1] = E*MLPdaf[l-i-1]
-                else:
-                    MLPd[l-i-1] = np.matmul(MLPw[l-i][:,1:].T,MLPd[l-i])*MLPdaf[l-i-1]
-            return MLPd, J.sum()
-        
-        def gradient(MLPd, MLPx):
-            for i in range(len(MLPg)):
-                MLPg[i] = np.matmul(MLPd[i],MLPx[i].T)
-            return MLPg
-        
-        def w_act(MLPw, MLPg, n):
-            # print(MLPw)
-            for i in range(len(MLPw)):
-                MLPw[i] = MLPw[i] - n*MLPg[i]
-            return MLPw
-        
-        MLPx,MLPy,MLPdaf = xy_act(MLPw,MLPx,MLPy,vfun)
-        MLPd = deltas(MLPw, MLPdaf, MLPy, Y)
-        MLPg = gradient(MLPd, MLPx)
-        MLPw = w_act(MLPw, MLPg, 0.005)
-        return(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist)
- 
-    def BP(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist, vfun):    #Back Propagation
-        def xy_act(MLPw, MLPx, MLPy, vfun):
-            for i in range(len(MLPw)): 
-                MLPy[i] = vfun[i].af(np.matmul(MLPw[i],MLPx[i]))
-                try:
-                    MLPx[i+1][1:,:] = MLPy[i]
-                except:
-                    pass
-            return MLPx,MLPy
-        
-        def inner_delta(w, d, daf): 
-            d_ = np.matmul(w,d)*daf
-            return d_
+        MLPx, MLPy, MLPdaf = xy_act(MLPw, MLPx, MLPy, vfun)
         
         
-        def outer_delta(daf, y, Y):
-            J = (y-Y)**2/2
-            E = y-Y
-            print(J.sum())
-            d_ = -E*daf
-            return d_
-
         
-        def gradient(d, x):
-            return np.matmul(d,x)
         
-        def w_act(w, g, n):
-            return w - n*g
-        
-
-        
-        MLPx,MLPy = xy_act(MLPw,MLPx,MLPy,vfun)
-        l = len(MLPdaf)
-        for i in range(len(MLPw)): 
-            if i == 0:
-                MLPd[l-1] = outer_delta(MLPdaf[l-i-1],MLPy[-1],Y.T)
-            else:
-                MLPd[l-i-1] = inner_delta(MLPw[l-i][:,1:].T,MLPd[l-i],MLPdaf[l-i-1])
-            MLPg[l-i-1] = gradient(MLPd[l-1-i], MLPx[l-1-i].T)
-            MLPw[l-i-1] = w_act(MLPw[l-i-1], MLPg[l-i-1], 0.001)
-     
-        
-        return(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist)
+        return MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist[i]
     
        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     ##### Define layers and weights #####
     layers = [X.shape[1],Y.shape[1]] # X, inner layer1, il2, ..., iln, Y 
     if inner_layers:
@@ -136,8 +84,7 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
 
     ##### xy actualization #####
     for i in range(iterations):
-        MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist = GD(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist, vfun)
-        # MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist = BP(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist, vfun)
+        MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist[i] = LM(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist, vfun, i)
 
         
             
