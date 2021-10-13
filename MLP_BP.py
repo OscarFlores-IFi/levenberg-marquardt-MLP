@@ -33,13 +33,14 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
         return MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist[i]
     
        
+    # primer parte del jacobiano
     
+    Jac[0:5,0:201] = -MLPdaf[-1][0]*MLPx[-1]
+    Jac[5:10,201:402] = -MLPdaf[-1][1]*MLPx[-1]
+    Jac[10:15,402:603] = -MLPdaf[-1][2]*MLPx[-1]
     
-    
-    
-    
-    
-    
+    # Segunda parte del jacobiano
+    np.matmul(np.reshape(MLPw[2][0,1:],(-1,1)),np.reshape(-MLPdaf[-1][0],(1,-1)))*MLPdaf[1] # delta
     
     
     
@@ -76,7 +77,8 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
     MLPdaf = [np.ones((layers[i+1],X.shape[0])) for i in range(len(layers)-1)]
     MLPd = [np.ones((layers[i+1],X.shape[0])) for i in range(len(layers)-1)]
     MLPg = [np.ones((layers[i+1],layers[i]+1)) for i in range(len(layers)-1)]
-    
+    Jac = np.zeros((np.sum([MLPw[i].shape[0]*MLPw[i].shape[1] for i in range(3)]),Y.shape[0]*Y.shape[1]))
+
     vfun = [Tanh]*(len(layers)-2)+[Linear]
     Jhist = np.zeros(iterations)
     
@@ -109,7 +111,7 @@ class Linear():
     def af(x):
         return x
     def daf(x):
-        return 1       
+        return np.ones(x.shape)       
     
 ##### #####
 
