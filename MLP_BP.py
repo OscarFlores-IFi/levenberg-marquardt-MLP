@@ -11,12 +11,12 @@ import pandas as pd
 def MLP(X, Y, inner_layers=[], iterations = 5000):
     t0 = time.time()
     
-    def LM(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist, vfun, i):
+    def LM(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun, i):
            
         def xy_act(MLPw, MLPx, MLPy, vfun):
             for i in range(len(MLPw)): 
                 tmp = np.matmul(MLPw[i],MLPx[i])
-                print(tmp)
+                # print(tmp)
                 MLPy[i] = vfun[i].af(tmp)
                 MLPdaf[i] = vfun[i].daf(tmp)
                 try:
@@ -30,19 +30,46 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
         
         
         
-        return MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist[i]
+      
     
-       
-    # primer parte del jacobiano
-    
-    Jac[0:5,0:201] = -MLPdaf[-1][0]*MLPx[-1]
-    Jac[5:10,201:402] = -MLPdaf[-1][1]*MLPx[-1]
-    Jac[10:15,402:603] = -MLPdaf[-1][2]*MLPx[-1]
-    
-    # Segunda parte del jacobiano
-    np.matmul(np.reshape(MLPw[2][0,1:],(-1,1)),np.reshape(-MLPdaf[-1][0],(1,-1)))*MLPdaf[1] # delta
-    
-    
+        ######################################################################
+        # primer parte del jacobiano
+        
+        Jac[0:5,0:201] = -MLPdaf[-1][0]*MLPx[-1]
+        Jac[5:10,201:402] = -MLPdaf[-1][1]*MLPx[-1]
+        Jac[10:15,402:603] = -MLPdaf[-1][2]*MLPx[-1]
+        
+        print('Jacobiano 1:')
+        print(Jac)
+        
+        
+        # Segunda parte del jacobiano
+        np.matmul(np.reshape(MLPw[2][0,1:],(-1,1)),np.reshape(-MLPdaf[-1][0],(1,-1)))*MLPdaf[1] # delta
+        
+        
+        ######################################################################
+        
+        
+        
+        # reescribiendo jacobiano iterativo
+        
+        for i in range(MLPw[-1].shape[0]):
+            Jac[MLPw[-1].shape[1]*i:MLPw[-1].shape[1]*(i+1), MLPy[-1].shape[1]*i:MLPy[-1].shape[1]*(i+1)] = -MLPdaf[-1][i]*MLPx[-1]
+        
+        print('Jacobiano 2:')
+        print(Jac)
+        
+        ######################################################################
+        
+        
+
+        
+        
+        
+        
+        
+        
+        return MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist[i] 
     
     
     
@@ -86,13 +113,13 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
 
     ##### xy actualization #####
     for i in range(iterations):
-        MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist[i] = LM(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist, vfun, i)
+        MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist[i] = LM(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun, i)
 
         
             
     print('execution time: {} seconds'.format(time.time()-t0))
 
-    return MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist, vfun
+    return MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun
 
 ############## Funciones de Activación ################
 class Sigmoid():
@@ -122,7 +149,7 @@ Y = pd.read_csv('Y.csv', header = None)
 
 
 # MLP(X,Y) # No inner layers
-MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jhist, vfun = MLP(X,Y, [7,4], iterations = 5) # With inner layers
+MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun = MLP(X,Y, [7,4], iterations = 5) # With inner layers
 
 
 
