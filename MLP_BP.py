@@ -25,6 +25,20 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
                     pass
             return MLPx,MLPy,MLPdaf
         
+        def gradient(MLPg, Jac, y, yhat):
+            A = np.matmul(Jac,Jac.T)
+            B = np.identity(A.shape[0])
+            C = np.matmul(np.linalg.inv(A+B*0.5),Jac)
+            D = np.reshape((Y.T-MLPy[-1]).values,(Y.shape[0]*Y.shape[1],1))
+            E = np.matmul(C,D) # actualización de pesos
+            
+            ini = 0 
+            for i in np.arange(1,len(MLPw)+1):
+                MLPg[-i] = E[ini:ini+MLPg[-i].size].reshape(MLPg[-i].shape)
+                ini += MLPg[-i].size
+            
+            return MLPg 
+        
         MLPx, MLPy, MLPdaf = xy_act(MLPw, MLPx, MLPy, vfun)
         
         
@@ -61,45 +75,54 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
         ######################################################################
         
         #        # reescribiendo jacobiano iterativo
-        try:
-            for i in range(MLPw[-1].shape[0]):   # iteration over 'y' outputs
-                ini = 0 
-                for l in range(len(MLPw)):     # iteration over layers
-                
-                    if l == 0:
-                        # primer parte
-                        MLPd[-1][i,:] = MSE_reg.dEdY(Y[i], MLPy[-1][i])*MLPdaf[-1][i] # delta 1 (cambiar a funcion de costo genérica)
-                        Jac[MLPw[-1].shape[1]*i:MLPw[-1].shape[1]*(i+1), MLPy[-1].shape[1]*i:MLPy[-1].shape[1]*(i+1)] = MLPd[-1][i]*MLPx[-1] # jacobiano
-                        ini += MLPw[-1].shape[0]*MLPw[-1].shape[1] 
-                        print(MLPw[-1].shape[1]*i,MLPw[-1].shape[1]*(i+1), MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
-                        
-                    elif l == 1:
-                        # segunda parte
-                        MLPd[-2] = np.matmul(np.reshape(MLPw[-1][i,1:],(-1,1)),np.reshape(MLPd[-1][i],(1,-1)))*MLPdaf[-2] # delta 2
-                        for j in range(MLPd[-2].shape[0]):
-                            Jac[ini + j*MLPx[-2].shape[0]:ini + (j+1)*MLPx[-2].shape[0], MLPy[-1].shape[1]*i:MLPy[-1].shape[1]*(i+1)] = MLPd[-2][j,:]*MLPx[-2]
-                            print(ini + j*MLPx[-2].shape[0],ini + (j+1)*MLPx[-2].shape[0], MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
-                        ini += MLPw[-2].shape[0]*MLPw[-2].shape[1]
-                        
-                    else: 
-                        # tercera parte
-                        MLPd[-l-1] = np.matmul(MLPw[-l][:,1:].T,MLPd[-l])*MLPdaf[-l-1] # delta
-                        for j in range(MLPd[-l-1].shape[0]):
-                            print(ini + j*MLPx[-l-1].shape[0],ini + (j+1)*MLPx[-l-1].shape[0] , MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
-                            Jac[ini + j*MLPx[-l-1].shape[0]:ini + (j+1)*MLPx[-l-1].shape[0], MLPy[-1].shape[1]*i:MLPy[-1].shape[1]*(i+1)] = MLPd[-l-1][j,:]*MLPx[-l-1]
-                        ini += MLPw[-l-1].shape[0]*MLPw[-l-1].shape[1]
-        except:
-            pass
-                        
-                
+        for i in range(MLPw[-1].shape[0]):   # iteration over 'y' outputs
+            ini = 0 
+            for l in range(len(MLPw)):     # iteration over layers
+            
+                if l == 0:
+                    # primer parte
+                    MLPd[-1][i,:] = MSE_reg.dEdY(Y[i], MLPy[-1][i])*MLPdaf[-1][i] # delta 1 (cambiar a funcion de costo genérica) # Mod. funcion de costo 
+                    Jac[MLPw[-1].shape[1]*i:MLPw[-1].shape[1]*(i+1), MLPy[-1].shape[1]*i:MLPy[-1].shape[1]*(i+1)] = MLPd[-1][i]*MLPx[-1] # jacobiano
+                    ini += MLPw[-1].shape[0]*MLPw[-1].shape[1] 
+                    print(MLPw[-1].shape[1]*i,MLPw[-1].shape[1]*(i+1), MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
+                    
+                elif l == 1:
+                    # segunda parte
+                    MLPd[-2] = np.matmul(np.reshape(MLPw[-1][i,1:],(-1,1)),np.reshape(MLPd[-1][i],(1,-1)))*MLPdaf[-2] # delta 2
+                    for j in range(MLPd[-2].shape[0]):
+                        Jac[ini + j*MLPx[-2].shape[0]:ini + (j+1)*MLPx[-2].shape[0], MLPy[-1].shape[1]*i:MLPy[-1].shape[1]*(i+1)] = MLPd[-2][j,:]*MLPx[-2]
+                        print(ini + j*MLPx[-2].shape[0],ini + (j+1)*MLPx[-2].shape[0], MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
+                    ini += MLPw[-2].shape[0]*MLPw[-2].shape[1]
+                    
+                else: 
+                    # tercera parte
+                    MLPd[-l-1] = np.matmul(MLPw[-l][:,1:].T,MLPd[-l])*MLPdaf[-l-1] # delta
+                    for j in range(MLPd[-l-1].shape[0]):
+                        print(ini + j*MLPx[-l-1].shape[0],ini + (j+1)*MLPx[-l-1].shape[0] , MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
+                        Jac[ini + j*MLPx[-l-1].shape[0]:ini + (j+1)*MLPx[-l-1].shape[0], MLPy[-1].shape[1]*i:MLPy[-1].shape[1]*(i+1)] = MLPd[-l-1][j,:]*MLPx[-l-1]
+                    ini += MLPw[-l-1].shape[0]*MLPw[-l-1].shape[1]
+ 
+        
+     
 
+
+            
+        MLPg = gradient(MLPg, Jac, Y, MLPy[-1])   
+        
+        for i in range(len(MLPg)):
+            MLPw[i] = MLPw[i]-MLPg[i]
         
         
         
         
         
         
-        return MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist[i] 
+        
+        
+        
+        
+        
+        return MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac
     
     
     
@@ -143,7 +166,7 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
 
     ##### xy actualization #####
     for i in range(iterations):
-        MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist[i] = LM(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun, i)
+        MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac = LM(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun, i)
 
         
             
@@ -191,7 +214,7 @@ Y = pd.read_csv('Y.csv', header = None)
 
 
 # MLP(X,Y) # No inner layers
-MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun = MLP(X,Y, [7,5,4], iterations = 3) # With inner layers
+MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun = MLP(X,Y, [7,5,4], iterations = 5000) # With inner layers
 
 
 
