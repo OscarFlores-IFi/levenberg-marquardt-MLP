@@ -84,21 +84,21 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
                     MLPd[-1][i,:] = MSE_reg.dEdY(Y[i], MLPy[-1][i])*MLPdaf[-1][i] # delta 1 (cambiar a funcion de costo genérica) # Mod. funcion de costo 
                     Jac[MLPw[-1].shape[1]*i:MLPw[-1].shape[1]*(i+1), MLPy[-1].shape[1]*i:MLPy[-1].shape[1]*(i+1)] = MLPd[-1][i]*MLPx[-1] # jacobiano
                     ini += MLPw[-1].shape[0]*MLPw[-1].shape[1] 
-                    print(MLPw[-1].shape[1]*i,MLPw[-1].shape[1]*(i+1), MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
+                    # print(MLPw[-1].shape[1]*i,MLPw[-1].shape[1]*(i+1), MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
                     
                 elif l == 1:
                     # segunda parte
                     MLPd[-2] = np.matmul(np.reshape(MLPw[-1][i,1:],(-1,1)),np.reshape(MLPd[-1][i],(1,-1)))*MLPdaf[-2] # delta 2
                     for j in range(MLPd[-2].shape[0]):
                         Jac[ini + j*MLPx[-2].shape[0]:ini + (j+1)*MLPx[-2].shape[0], MLPy[-1].shape[1]*i:MLPy[-1].shape[1]*(i+1)] = MLPd[-2][j,:]*MLPx[-2]
-                        print(ini + j*MLPx[-2].shape[0],ini + (j+1)*MLPx[-2].shape[0], MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
+                        # print(ini + j*MLPx[-2].shape[0],ini + (j+1)*MLPx[-2].shape[0], MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
                     ini += MLPw[-2].shape[0]*MLPw[-2].shape[1]
                     
                 else: 
                     # tercera parte
                     MLPd[-l-1] = np.matmul(MLPw[-l][:,1:].T,MLPd[-l])*MLPdaf[-l-1] # delta
                     for j in range(MLPd[-l-1].shape[0]):
-                        print(ini + j*MLPx[-l-1].shape[0],ini + (j+1)*MLPx[-l-1].shape[0] , MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
+                        # print(ini + j*MLPx[-l-1].shape[0],ini + (j+1)*MLPx[-l-1].shape[0] , MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
                         Jac[ini + j*MLPx[-l-1].shape[0]:ini + (j+1)*MLPx[-l-1].shape[0], MLPy[-1].shape[1]*i:MLPy[-1].shape[1]*(i+1)] = MLPd[-l-1][j,:]*MLPx[-l-1]
                     ini += MLPw[-l-1].shape[0]*MLPw[-l-1].shape[1]
  
@@ -110,7 +110,7 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
         MLPg = gradient(MLPg, Jac, Y, MLPy[-1])   
         
         for i in range(len(MLPg)):
-            MLPw[i] = MLPw[i]-MLPg[i]
+            MLPw[i] = MLPw[i]-MLPg[i]*0.05
         
         
         
