@@ -11,7 +11,7 @@ import pandas as pd
 def MLP(X, Y, inner_layers=[], iterations = 5000):
     t0 = time.time()
     
-    def LM(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun, i):
+    def LM(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun, i, Mu):
            
         def xy_act(MLPw, MLPx, MLPy, vfun):
             for i in range(len(MLPw)): 
@@ -25,10 +25,10 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
                     pass
             return MLPx,MLPy,MLPdaf
         
-        def gradient(MLPg, Jac, y, yhat):
+        def gradient(MLPg, Jac, y, yhat, Mu):
             A = np.matmul(Jac,Jac.T)
             B = np.identity(A.shape[0])
-            C = np.matmul(np.linalg.inv(A+B*0.5),Jac) # cambiar mu
+            C = np.matmul(np.linalg.inv(A+B*Mu),Jac) # cambiar mu
             D = np.reshape((Y.T-MLPy[-1]).values,(Y.shape[0]*Y.shape[1],1))
             E = np.matmul(C,D) # actualización de pesos
             
@@ -72,14 +72,27 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
                     ini += MLPw[-l-1].shape[0]*MLPw[-l-1].shape[1]
  
             
-        MLPg = gradient(MLPg, Jac, Y, MLPy[-1])   
+ 
+        ###### Actualización pesos por gradiente #####
+        MLPg = gradient(MLPg, Jac, Y, MLPy[-1], Mu)   
+        MLPw_copy = MLPw.copy()
         
         for i in range(len(MLPg)):
-            MLPw[i] = MLPw[i]-MLPg[i] *0.05
+            MLPw_copy[i] = MLPw[i]-MLPg[i]  # Multiplicador nabla arbitrario
         
+     
+        ###### Estimar siguiente iteracion #######        
+        _, yhat, _ = xy_act(MLPw_copy, MLPx, MLPy, vfun)
+     
+        ###### 
+        Jhat = 0 
+        for i in range(MLPw[-1].shape[0]):
+            Jhat += MSE_reg.J(Y[i], MLPy[-1][i])
+        if Jhat < J:
+            return MLPw_copy, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, J, Mu/10
+
         
-        
-        return MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, J 
+        return MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, J, Mu*10
     
     
     
@@ -107,8 +120,9 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
     MLPx[0][1:,:] = X.T 
 
     ##### xy actualization #####
+    Mu = 0.5
     for i in range(iterations):
-        MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist[i] = LM(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun, i)
+        MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist[i], Mu = LM(MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun, i, Mu)
 
         
             
