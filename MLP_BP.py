@@ -49,8 +49,8 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
             
                 if l == 0:
                     # primer parte
-                    J += MSE_reg.J(Y[i], MLPy[-1][i])
-                    MLPd[-1][i,:] = MSE_reg.dEdY(Y[i], MLPy[-1][i])*MLPdaf[-1][i] # delta 1 (cambiar a funcion de costo genérica) # Mod. funcion de costo 
+                    J += Crossentropy.J(Y[i], MLPy[-1][i])
+                    MLPd[-1][i,:] = Crossentropy.dEdY(Y[i], MLPy[-1][i])*MLPdaf[-1][i] # delta 1 (cambiar a funcion de costo genérica) # Mod. funcion de costo 
                     Jac[MLPw[-1].shape[1]*i:MLPw[-1].shape[1]*(i+1), MLPy[-1].shape[1]*i:MLPy[-1].shape[1]*(i+1)] = MLPd[-1][i]*MLPx[-1] # jacobiano
                     ini += MLPw[-1].shape[0]*MLPw[-1].shape[1] 
                     # print(MLPw[-1].shape[1]*i,MLPw[-1].shape[1]*(i+1), MLPy[-1].shape[1]*i,MLPy[-1].shape[1]*(i+1))
@@ -83,11 +83,12 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
      
         ###### Estimar siguiente iteracion #######        
         _, yhat, _ = xy_act(MLPw_copy, MLPx, MLPy, vfun)
-     
+        
+        
         ###### 
         Jhat = 0 
         for i in range(MLPw[-1].shape[0]):
-            Jhat += MSE_reg.J(Y[i], MLPy[-1][i])
+            Jhat += Crossentropy.J(Y[i], MLPy[-1][i])
         if Jhat < J:
             return MLPw_copy, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, J, Mu/10
 
@@ -114,7 +115,7 @@ def MLP(X, Y, inner_layers=[], iterations = 5000):
     MLPg = [np.ones((layers[i+1],layers[i]+1)) for i in range(len(layers)-1)]
     Jac = np.zeros((np.sum([MLPw[i].shape[0]*MLPw[i].shape[1] for i in range(len(MLPw))]),Y.shape[0]*Y.shape[1])) 
 
-    vfun = [Tanh]*(len(layers)-2)+[Linear]
+    vfun = [Tanh]*(len(layers)-2)+[Sigmoid]
     Jhist = np.zeros(iterations)
     
     MLPx[0][1:,:] = X.T 
@@ -160,17 +161,31 @@ class MSE_reg():
     def dEdY(y,yhat):
         return -np.ones(yhat.shape)
         
-    
+class Crossentropy():
+    def J(y, yhat):
+        return -np.sum(y*np.log(yhat))
+    def dJdY(y, yhat):
+        pass
+    def dEdY(y, yhat):
+        return -np.ones(yhat.shape)/(yhat*(1-yhat))
+        
+        
+
 ##### #####
 
-X = pd.read_csv('X.csv', header = None)
-Y = pd.read_csv('Y.csv', header = None)
+# X = pd.read_csv('X.csv', header = None)
+# Y = pd.read_csv('Y.csv', header = None)
 # X = (X-X.mean(axis=0))/X.std(axis=0)
 # Y = (Y-Y.mean(axis=0))/Y.std(axis=0)
 
+from sklearn.datasets import load_iris
+digits = load_iris()
+
+X = digits.data
+Y = pd.get_dummies(digits.target)
 
 # MLP(X,Y) # No inner layers
-MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun = MLP(X,Y, [7,5], iterations = 5000) # With inner layers
+MLPw, MLPx, MLPy, MLPd, MLPdaf, MLPg, Jac, Jhist, vfun = MLP(X,Y, [7,10,5], iterations = 100) # With inner layers
 
 
 
